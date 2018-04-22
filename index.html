@@ -1,0 +1,176 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="style.css">
+    <title>ReactJS</title>
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.js"></script>
+    <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="mount-point"></div>
+    <script type="text/babel">
+      class Note extends React.Component{
+    render(){
+      let style = {backgroundColor:this.props.color}
+      return <div className="note" style={style}>
+        <span className="delete-note" onClick={this.props.onDelete}>x</span>
+        {this.props.children}
+            </div>;
+    }
+  }
+  class NoteEditor extends React.Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      text:""
+     
+    };
+  };
+  handleTextChange = (event) =>{
+    let txt= event.target.value;
+    this.setState ({text:txt});
+  };
+  handleNoteAdd =() =>{
+    let newNote = {
+      text:this.state.text,
+      color:"yellow",
+      id: Date.now()
+    };
+    this.props.onNoteAdd(newNote);
+    this.setState({text:''});
+  };
+
+    render(){
+      return <div className="note-editor">
+               <textarea 
+               placeholder="Enter your text..." rows={5} 
+               className="textarea"
+               value ={this.state.text}
+               onChange={this.handleTextChange}
+                />
+               <button className="add-button" onClick={this.handleNoteAdd}>add</button> 
+              </div>;
+    }
+  }
+  class NotesGrid extends React.Component{
+    componentDidMount(){
+    let grid = this.refs.grid
+      this.msnry = new Masonry(grid,{
+        itemSelector:".note",
+        columnWidth:220,
+        gutter:10,
+        isFitWidth:true
+    });
+    };
+
+    componentDidUpdate(prevProps){
+      if(this.props.notes.length !== prevProps.notes.length){
+          this.msnry.reloadItems();
+          this.msnry.layout();
+        }
+      }
+      newtask =(note)=>{
+      let onNoteDelete = this.props.onNoteDelete;
+                    return (<Note 
+                    key={note.id} 
+                    color={note.color}
+                    onDelete={onNoteDelete.bind(null,note)}>
+                    {note.text}
+                    </Note>
+                    );
+                  };
+    
+    render(){
+
+      return  (<div className="notes-grid" ref="grid">
+                {
+                  this.props.notes.map(this.newtask)
+                }  
+              </div>
+      );
+    }
+  }
+  class NotesApp extends React.Component{
+    constructor(props){
+    super(props);
+    this.state = {
+      notes:[{
+              id:0,
+              text:"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi in hic expedita dolore fuga necessitatibus dolorem sit, voluptas excepturi, ipsam qui quidem molestiae, nostrum modi! Omnis sapiente, enim ex. Blanditiis? ipsum dolor sit amet", 
+              color:"#FFD700",
+            },{
+              id:1,
+              text:"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusamus alias, voluptate id, maiores necessitatibus explicabo reprehenderit inventore ex consequatur! Alias aperiam porro recusandae expedita incidunt ratione et eum rem hic! ipsum dolor sit amet", 
+              color:"#F4A67F"
+            },{
+              id:2,
+              text:"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Explicabo culpa tenetur repellat molestias hic. Enim mollitia nesciunt natus. Aperiam animi eum libero quam sint quae, non impedit sunt maiores voluptatem. ipsum dolor sit amet",
+              color:"#ffRhfg"
+            },{
+              id:3,
+              text:"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi in hic expedita dolore fuga necessitatibus dolorem sit, voluptas excepturi, ipsam qui quidem molestiae, nostrum modi! Omnis sapiente, enim ex. Blanditiis? ipsum dolor sit amet", 
+              color:"#EEBEBE",
+            },{
+              id:4,
+              text:"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusamus alias, voluptate id, maiores necessitatibus explicabo reprehenderit inventore ex consequatur! Alias aperiam porro recusandae expedita incidunt ratione et eum rem hic! ipsum dolor sit amet", 
+              color:"#A0F6C0"
+            },{
+              id:5,
+              text:"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Explicabo culpa tenetur repellat molestias hic. Enim mollitia nesciunt natus. Aperiam animi eum libero quam sint quae, non impedit sunt maiores voluptatem. ipsum dolor sit amet",
+              color:"#FBBAF9"
+            }
+        ]      
+    };
+  };
+
+  componentDidMount(){
+      let localNotes = JSON.parse(localStorage.getItem('notes'));
+      if(localNotes){
+        this.setState({notes: localNotes});
+      }
+    }
+
+  componentDidUpdate (){
+  this._updateLocalStorage();
+}
+
+  handleNoteDelete = (note) => {
+    let noteId = note.id;
+    let newNotes = this.state.notes.filter(function(note){
+      return note.id !== noteId;
+  });
+    this.setState({notes:newNotes});
+  }
+
+  handleNoteAdd =(newNote) =>{
+    let newNotes = this.state.notes.slice();
+    newNotes.unshift(newNote);
+    this.setState({notes: newNotes});
+  };
+    render(){
+      return  (<div className="notes-app">
+                <h2 className="app-header">New App</h2>
+                <NoteEditor onNoteAdd={this.handleNoteAdd} />
+                <NotesGrid notes={this.state.notes} onNoteDelete = {this.handleNoteDelete}/>
+              </div>
+      );
+    }
+  
+  _updateLocalStorage = () =>{
+    let notes = JSON.stringify(this.state.notes);
+    localStorage.setItem('notes', notes);
+  }
+
+  }
+
+
+  ReactDOM.render(
+   <NotesApp />,
+   document.getElementById('mount-point') 
+  );
+    </script>
+
+  </body>
+</html>
